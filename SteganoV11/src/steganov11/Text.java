@@ -1,11 +1,10 @@
-package steganov11;
 public class Text
 {
     public static final String END_OF_STRING = "00000000";
 	
 	public static String[] getParts(String s, int partitionSize)
 	//découpe une chaine de caractères en chaines de partitionSize caractères
-	{
+	{ 
         String[] groupes = new String[s.length()/partitionSize];
         
         for (int i=0; i<s.length(); i+=partitionSize)

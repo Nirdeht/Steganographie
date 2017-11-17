@@ -1,4 +1,4 @@
-package steganov11;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -6,31 +6,73 @@ import java.io.RandomAccessFile;
 
 public class Image {
     private RandomAccessFile file;
+    private int degradation;
+    private static final int TAILLE_ENTETE=2; //Entete du texte, qui suit l'entete de l'image image etant en bitmap
     
-    public Image(String path) throws FileNotFoundException
+    public Image(String path, int deg) throws FileNotFoundException
     {
         this.file = new RandomAccessFile(path, "rw");
+        this.degradation=deg;
     }
+    
+    public void destroy()
+    {
+		try
+		{
+			this.file.close();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+    
+    public void creerEntete()
+    {
+		String binDeg = Text.decToBin(this.degradation, 4); 
+		
+        try
+        {
+			int offset = this.getOffsetBMP(); // on se positionne apres l'entete Bitmap
+			System.out.println(offset);
+			String[] groupes = Text.getParts(binDeg,2); // on decoupe 2 bit par 2 bit
+			for(int i=0; i<groupes.length; i++)
+			{
+					String b = Text.decToBin(this.file.read(), 8);
+					b = Text.replaceCharAt(b, b.length()-2, groupes[i].charAt(0)); // on change les deux derniers bit pour 2 octets
+					b = Text.replaceCharAt(b, b.length()-1, groupes[i].charAt(1));
+
+					this.file.seek(offset+i);
+					this.file.write(Text.binToDec(b));
+			}
+		}
+		catch(IOException e)
+		{
+				e.printStackTrace();
+		}
+		
+	}
     
     public void coderImage(String texteACoder)
     {
-
+		this.creerEntete();
         String texteBinaire = Text.stringToBin(texteACoder);
         texteBinaire += Text.END_OF_STRING; //on ajoute le caractère fin de chaine '\0'
-		String[] groupes = Text.getParts(texteBinaire, 2); //découpe la chaine en chaine de deux bits 
+		String[] groupes = Text.getParts(texteBinaire, this.degradation); //découpe la chaine en chaine de 2/4/8 bits 
 
         try
         {
+			this.file.seek(0);
             int offset = this.getOffsetBMP();
+            System.out.println(offset);
 
-            for(int i=0; i<groupes.length; i++)//pour chaque groupe de deux bits
+            for(int i=0; i<groupes.length; i++)//pour chaque groupe de 2/4/8 bits
             {
                 String b = Text.decToBin(this.file.read(), 8);
+				for(int j=0;j<this.degradation;j++)
+					b = Text.replaceCharAt(b, b.length()-(j+1), groupes[i].charAt(this.degradation-j-1));
 
-				b = Text.replaceCharAt(b, b.length()-2, groupes[i].charAt(0));
-				b = Text.replaceCharAt(b, b.length()-1, groupes[i].charAt(1));
-
-                this.file.seek(offset+i);
+                this.file.seek(offset+Image.TAILLE_ENTETE+i);
                 this.file.write(Text.binToDec(b));
             }
         }
@@ -45,12 +87,20 @@ public class Image {
         try
         {
             setAtBeginningBMP();
-
+            String deg="";
+            for(int i=0;i<Image.TAILLE_ENTETE;i++){
+				
+					String s = Text.decToBin(file.read(),8);
+					deg +=s.substring(s.length()-2);
+			}
+			this.degradation = Text.binToDec(deg);
+			
             String msg="";
             String curr_char = readByteBMP();
             while(!curr_char.equals(Text.binToString(Text.END_OF_STRING)))
             {
                 msg += curr_char;
+                System.out.println(curr_char);
                 curr_char = readByteBMP();
             }
 
@@ -67,11 +117,12 @@ public class Image {
         try
         {
             String s = "";
-
-            for(int i=0; i<4; i++)//on lit par groupe de deux bits. Pour former un octet il faut en lire 4 groupes
+            for(int i=0; i<8/this.degradation; i++)//on lit par groupe de deux bits. Pour former un octet il faut en lire 4 groupes
             {
                 String value = Text.decToBin(this.file.read(), 8);
-                s += String.valueOf(value.charAt(value.length()-2)) + String.valueOf(value.charAt(value.length()-1));
+                System.out.println(value);
+                for(int j=0;j<this.degradation;j++)
+					s = String.valueOf(value.charAt(value.length()-j-1)) + s;
             }
 
             return Text.binToString(s);
