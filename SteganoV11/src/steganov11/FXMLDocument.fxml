@@ -13,7 +13,7 @@
       <Button fx:id="coder" layoutX="385.0" layoutY="341.0" mnemonicParsing="false" onAction="#handleButtonCoder" text="Coder" />
       <Button fx:id="decoder" layoutX="527.0" layoutY="341.0" mnemonicParsing="false" onAction="#handleButtonDecoder" text="Décoder" />
       <Button fx:id="parcourir" layoutX="117.0" layoutY="341.0" mnemonicParsing="false" onAction="#handleButtonParcourir" text="Parcourir" />
-      <ImageView fx:id="image" fitHeight="308.0" fitWidth="292.0" layoutX="18.0" layoutY="17.0" pickOnBounds="true" preserveRatio="true" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="20.0" />
+      <ImageView fx:id="imageView" fitHeight="308.0" fitWidth="292.0" layoutX="18.0" layoutY="17.0" pickOnBounds="true" preserveRatio="true" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="20.0" />
       <Slider fx:id="degradation" blockIncrement="1.0" layoutX="365.0" layoutY="382.0" majorTickUnit="1.0" max="3.0" min="1.0" prefHeight="25.0" prefWidth="241.0" />
       <Label fx:id="degradationValue" layoutX="371.0" layoutY="407.0" />
    </children>
