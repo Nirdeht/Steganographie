@@ -32,8 +32,6 @@ import javafx.scene.image.Image;
  */
 public class FXMLDocumentController implements Initializable {
 
-    private Label label;
-    private Button button;
     @FXML
     private TextArea texte;
     @FXML
@@ -44,27 +42,27 @@ public class FXMLDocumentController implements Initializable {
     private Button parcourir;
     @FXML
     private ImageView imageView;
-
-    public static steganov11.Image image;
-    public static String cheminImage;
     @FXML
     private Slider degradation;
-    @FXML
-    private Label degradationValue;
 
-    public void setImage(String path)
-    {
+    private steganov11.Image image;
+    private String cheminImage;
+
+    public void setImage(String path) {
         try {
-            image =  new steganov11.Image(path);
+            image = new steganov11.Image(path);
         } catch (FileNotFoundException ex) {
             Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         coder.setDisable(true);
         decoder.setDisable(true);
+        degradation.setDisable(true);
+        texte.setDisable(true);
+        
         degradation.setMin(0);
         degradation.setMax(3);
         degradation.setValue(0);
@@ -82,13 +80,13 @@ public class FXMLDocumentController implements Initializable {
 
         texte.textProperty().addListener((final ObservableValue<? extends String> observable, final String oldValue, final String newValue) -> {
             coder.setDisable(!isCodable());
-            
+
         });
     }
 
     @FXML
     private void handleButtonCoder(ActionEvent event) {
-        image.setDimension();
+        image.setDegradation((int)Math.pow(2,degradation.getValue()));
         image.coderImage(texte.getText());
         imageView.setImage(new Image(new File(cheminImage).toURI().toString()));
     }
@@ -101,10 +99,9 @@ public class FXMLDocumentController implements Initializable {
 
     private boolean isCodable() {
         int nbOctets = image.getNbOctets();
-        int nbOctetsNecessaires = (texte.getText().length() + steganov11.Image.TAILLE_ENTETE + 1) * (int)(8/Math.pow(2,degradation.getValue()));
-        
+        int nbOctetsNecessaires = (texte.getText().length() + 1) * (int) (8 / Math.pow(2, degradation.getValue())) + steganov11.Image.TAILLE_ENTETE;
+
         return !texte.getText().equals("") && imageView.getImage() != null && nbOctetsNecessaires <= nbOctets;
-        
     }
 
     private boolean isDecodable() {
@@ -123,12 +120,14 @@ public class FXMLDocumentController implements Initializable {
         File selectedFile = fileChooser.showOpenDialog(mainStage);
         if (selectedFile != null) {
             imageView.setImage(new Image(selectedFile.toURI().toString()));
+            cheminImage = selectedFile.getAbsolutePath();
             setImage(cheminImage);
+
+            degradation.setDisable(false);
+            texte.setDisable(false);
             coder.setDisable(!isCodable());
             decoder.setDisable(!isDecodable());
-            cheminImage = selectedFile.getAbsolutePath();
             System.out.println(image.getNbOctets());
-            
         }
     }
 

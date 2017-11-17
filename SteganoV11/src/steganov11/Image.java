@@ -18,25 +18,23 @@ public class Image {
     public Image(String path, int deg) throws FileNotFoundException {
         this.file = new RandomAccessFile(path, "rw");
         this.degradation = deg;
+        this.setDimension();
     }
 
     public Image(String path) throws FileNotFoundException {
-        this.file = new RandomAccessFile(path, "rw");
+        this(path, 1);
     }
-    
-    public int getLargeur()
-    {
+
+    public int getLargeur() {
         return this.largeur;
     }
-    
-    public int getHauteur()
-    {
+
+    public int getHauteur() {
         return this.hauteur;
     }
-    
-    public int getNbOctets()
-    {
-        return this.hauteur*this.largeur*3;
+
+    public int getNbOctets() {
+        return this.hauteur * this.largeur * 3;
     }
 
     public void destroy() {
@@ -47,7 +45,7 @@ public class Image {
         }
     }
 
-    public void setDimension(){
+    private void setDimension() {
         try {
             file.seek(0);
             file.skipBytes(18); //c'est constant
@@ -70,12 +68,19 @@ public class Image {
 
     }
 
+    public void setDegradation(int value) {
+        this.degradation = value;
+    }
+
+    public int getDegradation() {
+        return this.degradation;
+    }
+
     public void creerEntete() {
         String binDeg = Text.decToBin(this.degradation, 4);
-
         try {
-            file.seek(0);
-            int offset = this.getOffsetBMP(); // on se positionne apres l'entete Bitmap
+            int offset = this.getOffsetBMP();
+            this.setAtBeginningBMP();
             String[] groupes = Text.getParts(binDeg, 2); // on decoupe 2 bit par 2 bit
             for (int i = 0; i < groupes.length; i++) {
                 String b = Text.decToBin(this.file.read(), 8);
@@ -91,14 +96,14 @@ public class Image {
     }
 
     public void coderImage(String texteACoder) {
-        this.creerEntete();
-        String texteBinaire = Text.stringToBin(texteACoder);
-        texteBinaire += Text.END_OF_STRING; //on ajoute le caractère fin de chaine '\0'
-        String[] groupes = Text.getParts(texteBinaire, this.degradation); //découpe la chaine en chaine de 2/4/8 bits 
 
         try {
-            this.file.seek(0);
             int offset = this.getOffsetBMP();
+
+            this.creerEntete();
+            String texteBinaire = Text.stringToBin(texteACoder);
+            texteBinaire += Text.END_OF_STRING; //on ajoute le caractère fin de chaine '\0'
+            String[] groupes = Text.getParts(texteBinaire, this.degradation);
 
             for (int i = 0; i < groupes.length; i++)//pour chaque groupe de 2/4/8 bits
             {
@@ -124,13 +129,13 @@ public class Image {
                 String s = Text.decToBin(file.read(), 8);
                 deg += s.substring(s.length() - 2);
             }
+            System.out.println(deg);
             this.degradation = Text.binToDec(deg);
 
             String msg = "";
             String curr_char = readByteBMP();
             while (!curr_char.equals(Text.binToString(Text.END_OF_STRING))) {
                 msg += curr_char;
-                System.out.println(curr_char);
                 curr_char = readByteBMP();
             }
 
@@ -146,11 +151,12 @@ public class Image {
             for (int i = 0; i < 8 / this.degradation; i++)//on lit par groupe de deux bits. Pour former un octet il faut en lire 4 groupes
             {
                 String value = Text.decToBin(this.file.read(), 8);
-                System.out.println(value);
-                for (int j = 0; j < this.degradation; j++) {
-                    s = String.valueOf(value.charAt(value.length() - j - 1)) + s;
+                for (int j = this.degradation-1; j >=0; j--) {
+                    s += String.valueOf(value.charAt(value.length() - j - 1));
                 }
             }
+
+            System.out.println(Text.binToString(s));
 
             return Text.binToString(s);
         } catch (Exception e) {
@@ -161,6 +167,7 @@ public class Image {
 
     public int getOffsetBMP() {
         try {
+            file.seek(0);
             this.file.skipBytes(10);
 
             String s = "";
@@ -171,25 +178,16 @@ public class Image {
             }
 
             return Text.binToDec(s);
-        } catch (Exception e) {
+        } catch (IOException e) {
             return -1;
         }
     }
 
     public void setAtBeginningBMP() {
         try {
-            this.file.skipBytes(10); //on se déplace jusqu'à l'info sur l'adresse de début de l'image
-
-            String s = "";
-
-            for (int i = 0; i < 4; i++)//on lit l'info sur le début de l'image, codé sur 4 octets (en sens inverse)
-            {
-                s = Text.decToBin(this.file.read(), 8) + s;
-            }
-
-            int offset = Text.binToDec(s);
-            this.file.seek(offset);
-        } catch (Exception e) {
+            System.out.println(this.getOffsetBMP());
+            this.file.seek(this.getOffsetBMP());
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
