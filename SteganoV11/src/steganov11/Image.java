@@ -129,7 +129,6 @@ public class Image {
                 String s = Text.decToBin(file.read(), 8);
                 deg += s.substring(s.length() - 2);
             }
-            System.out.println(deg);
             this.degradation = Text.binToDec(deg);
 
             String msg = "";
@@ -155,8 +154,6 @@ public class Image {
                     s += String.valueOf(value.charAt(value.length() - j - 1));
                 }
             }
-
-            System.out.println(Text.binToString(s));
 
             return Text.binToString(s);
         } catch (Exception e) {
@@ -185,7 +182,6 @@ public class Image {
 
     public void setAtBeginningBMP() {
         try {
-            System.out.println(this.getOffsetBMP());
             this.file.seek(this.getOffsetBMP());
         } catch (IOException e) {
             e.printStackTrace();

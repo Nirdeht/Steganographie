@@ -41,6 +41,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.event.EventHandler;
 
 /**
  *
@@ -224,41 +226,32 @@ public class FXMLDocumentController implements Initializable {
             sf.messageProperty().addListener((obs, oldMsg, newMsg) -> {
                 messageTask.setText(newMsg);
             });
+            new Thread(sf).start();
         }
     }
 
     @FXML
     private void handleRecevoirFichier(ActionEvent event) {
-        byte[] buffer = new byte[1024];
-        int bw = 0;
-        File img;
-        BufferedReader in;
-        String fileName;
+        String dossier = destination.getText();
 
-        try {
-            Socket client = new Socket(ipRecevoir.getText(), Integer.valueOf(portRecevoir.getText())); //on se connecte au serveur
-
-            //on récupère le nom du fichier
-            in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-            fileName = in.readLine();
-
-            in.close();
-
-            img = new File(destination.getText() + "/" + fileName); //fichier de l'image
-
-            //on récupère l'image
-            FileOutputStream fos = new FileOutputStream(img);
-            InputStream fis = client.getInputStream();
-
-            while ((bw = fis.read(buffer)) != -1) {
-                fos.write(buffer, 0, bw);
-            }
-
-            fos.close();
-            fis.close();
-            client.close();
-        } catch (IOException ex) {
-            Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+        if (dossier.equals("")) {
+            dossier = System.getenv("user.home");
         }
+
+        tasks.ReceiveFile rf = new tasks.ReceiveFile(ipRecevoir.getText(), Integer.valueOf(portRecevoir.getText()), dossier);
+        rf.messageProperty().addListener((obs, oldMsg, newMsg) -> {
+            messageTask.setText(newMsg);
+        });
+
+        rf.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+            @Override
+            public void handle(WorkerStateEvent t) {
+                File img = rf.getValue();
+                if(img!=null)
+                    visualisationImage.setImage(new Image(img.toURI().toString()));
+                    imageView.setImage(new Image(img.toURI().toString()));
+            }
+        });
+        new Thread(rf).start();
     }
 }
