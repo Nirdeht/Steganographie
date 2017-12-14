@@ -151,7 +151,7 @@ public class Image {
             for (int i = 0; i < 8 / this.degradation; i++)//on lit par groupe de deux bits. Pour former un octet il faut en lire 4 groupes
             {
                 String value = Text.decToBin(this.file.read(), 8);
-                for (int j = this.degradation-1; j >=0; j--) {
+                for (int j = this.degradation - 1; j >= 0; j--) {
                     s += String.valueOf(value.charAt(value.length() - j - 1));
                 }
             }
