@@ -1,5 +1,17 @@
 package steganov11;
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
+
 public class Text {
 
     public static final String END_OF_STRING = "00000000";
@@ -78,5 +90,51 @@ public class Text {
         }
 
         return output;
+    }
+
+    public static String encrypt(String s, String cle) {
+        try {
+            byte[] key = cle.getBytes(); //Conversion de la clé en octets et création du vecteur d'initialisation
+            String IV = "12345678";
+
+            SecretKeySpec keySpec = new SecretKeySpec(key, "Blowfish");
+            Cipher cipher = Cipher.getInstance("Blowfish/CBC/PKCS5Padding"); //Création de la clé et du Cipher utilisant Blowfish
+
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec, new javax.crypto.spec.IvParameterSpec(IV.getBytes()));
+            byte[] encoding = cipher.doFinal(s.getBytes());
+
+            System.out.println("---------- Cryptage -----------");
+            System.out.println("MESSAGE CRYPTE EN BASE 64:\t " + DatatypeConverter.printBase64Binary(encoding)); //on code message en Base64
+
+            String crypted = DatatypeConverter.printBase64Binary(encoding); //on décode le message en Base64
+
+            return crypted;
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {
+            Logger.getLogger(Text.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+
+    public static String decrypt(String crypted, String cle) {
+        try {
+            byte[] ciphertext = DatatypeConverter.parseBase64Binary(crypted);
+            byte[] key = cle.getBytes(); //Conversion de la clé en octets et création du vecteur d'initialisation
+            String IV = "12345678";
+
+            SecretKeySpec keySpec = new SecretKeySpec(key, "Blowfish");
+            Cipher cipher = Cipher.getInstance("Blowfish/CBC/PKCS5Padding"); //Création de la clé et du Cipher utilisant Blowfish
+
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, new javax.crypto.spec.IvParameterSpec(IV.getBytes()));
+            byte[] message = cipher.doFinal(ciphertext);
+
+            return new String(message);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException ex) {
+            Logger.getLogger(Text.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+        catch(BadPaddingException ex)
+        {
+            return "Mot de passe erroné";
+        }
     }
 }

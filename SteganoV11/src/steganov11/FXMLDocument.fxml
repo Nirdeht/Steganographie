@@ -8,25 +8,27 @@
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane id="AnchorPane" fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="367.0" prefWidth="664.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="steganov11.FXMLDocumentController">
+<AnchorPane id="AnchorPane" fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400" prefWidth="664.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="steganov11.FXMLDocumentController">
    <children>
-      <TabPane fx:id="tabPane" prefHeight="364.0" prefWidth="664.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <TabPane fx:id="tabPane" prefHeight="397" prefWidth="664.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <tabs>
           <Tab fx:id="tabCoderDecoder" closable="false" text="Coder/Décoder">
             <content>
               <AnchorPane fx:id="paneCoderDecoder" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
                         <TextArea fx:id="textToHide" prefHeight="209.0" prefWidth="279.0" promptText="Entrez le message à cacher" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0" />
-                        <Button fx:id="coder" layoutX="523.0" layoutY="233.0" mnemonicParsing="false" onAction="#handleButtonCoder" text="Coder" />
-                        <Button fx:id="decoder" layoutX="583.0" layoutY="233.0" mnemonicParsing="false" onAction="#handleButtonDecoder" text="Décoder" />
-                        <Button fx:id="parcourir" layoutX="365.0" layoutY="233.0" mnemonicParsing="false" onAction="#handleButtonParcourir" text="Parcourir" />
+                        <PasswordField fx:id="password" layoutX="365.0" layoutY="233" prefWidth="148.0" promptText="Mot de passe" />
+                        <Button fx:id="coder" layoutX="523.0" layoutY="265" mnemonicParsing="false" onAction="#handleButtonCoder" text="Coder" />
+                        <Button fx:id="decoder" layoutX="583.0" layoutY="265" mnemonicParsing="false" onAction="#handleButtonDecoder" text="Décoder" />
+                        <Button fx:id="parcourir" layoutX="365.0" layoutY="265" mnemonicParsing="false" onAction="#handleButtonParcourir" text="Parcourir" />
                         <ImageView fx:id="imageView" fitHeight="296.0" fitWidth="338.0" layoutX="14.0" layoutY="20.0" pickOnBounds="true" preserveRatio="true" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="20.0" />
-                        <Slider fx:id="degradation" blockIncrement="1.0" layoutX="365.0" layoutY="266.0" majorTickUnit="1.0" max="3.0" min="1.0" prefHeight="25.0" prefWidth="279.0" />
-                        <Label fx:id="tailleTexteMax" layoutX="365.0" layoutY="293.0" />
-                        <Label fx:id="tailleTexteActuel" layoutX="365.0" layoutY="316.0" />
+                        <Slider fx:id="degradation" blockIncrement="1.0" layoutX="365.0" layoutY="295" majorTickUnit="1.0" max="3.0" min="1.0" prefHeight="25.0" prefWidth="279.0" />
+                        <Label fx:id="tailleTexteMax" layoutX="365.0" layoutY="330" />
+                        <Label fx:id="tailleTexteActuel" layoutX="365.0" layoutY="345" />
                      </children>
                   </AnchorPane>
             </content>

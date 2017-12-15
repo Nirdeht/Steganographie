@@ -3,6 +3,7 @@ package steganov11;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,8 +13,7 @@ public class Image {
     private int degradation;
     private int largeur;
     private int hauteur;
-
-    public static final int TAILLE_ENTETE = 2; //Entete du texte, qui suit l'entete de l'image image etant en bitmap
+    private int adresseDebut;
 
     public Image(String path, int deg) throws FileNotFoundException {
         this.file = new RandomAccessFile(path, "rw");
@@ -57,7 +57,7 @@ public class Image {
             this.largeur = Text.binToDec(s);
 
             s = new String();
-            for (int i = 0; i < 4; i++) //largeur sur 4 octets
+            for (int i = 0; i < 4; i++) //hauteur sur 4 octets
             {
                 s = Text.decToBin(file.read(), 8) + s;
             }
@@ -66,6 +66,10 @@ public class Image {
             Logger.getLogger(Image.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+    }
+
+    public void setAdresseDebut(int adr) {
+        this.adresseDebut = adr;
     }
 
     public void setDegradation(int value) {
@@ -86,10 +90,25 @@ public class Image {
                 String b = Text.decToBin(this.file.read(), 8);
                 b = Text.replaceCharAt(b, b.length() - 2, groupes[i].charAt(0)); // on change les deux derniers bit pour 2 octets
                 b = Text.replaceCharAt(b, b.length() - 1, groupes[i].charAt(1));
-
+                
                 this.file.seek(offset + i);
                 this.file.write(Text.binToDec(b));
-            }
+            }//on a écrit la dégradation
+
+            int nbOctets = this.getLengthEntete() - 2;
+            String adresseDebutBin = Text.decToBin(this.adresseDebut, nbOctets*2);
+ 
+            groupes = Text.getParts(adresseDebutBin, 2);
+
+            for (int i = 0; i < groupes.length; i++) {
+                String b = Text.decToBin(this.file.read(), 8);
+                b = Text.replaceCharAt(b, b.length() - 2, groupes[i].charAt(0)); // on change les deux derniers bit pour 2 octets
+                b = Text.replaceCharAt(b, b.length() - 1, groupes[i].charAt(1));
+
+                this.file.seek(offset + i  + 2);
+                this.file.write(Text.binToDec(b));
+            }//on a écrit l'adresse de début
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -101,6 +120,7 @@ public class Image {
             int offset = this.getOffsetBMP();
 
             this.creerEntete();
+            this.file.skipBytes(this.adresseDebut);
             String texteBinaire = Text.stringToBin(texteACoder);
             texteBinaire += Text.END_OF_STRING; //on ajoute le caractère fin de chaine '\0'
             String[] groupes = Text.getParts(texteBinaire, this.degradation);
@@ -112,7 +132,7 @@ public class Image {
                     b = Text.replaceCharAt(b, b.length() - (j + 1), groupes[i].charAt(this.degradation - j - 1));
                 }
 
-                this.file.seek(offset + Image.TAILLE_ENTETE + i);
+                this.file.seek(offset + this.getLengthEntete() + this.adresseDebut + i);
                 this.file.write(Text.binToDec(b));
             }
         } catch (IOException e) {
@@ -124,13 +144,22 @@ public class Image {
         try {
             setAtBeginningBMP();
             String deg = "";
-            for (int i = 0; i < Image.TAILLE_ENTETE; i++) {
-
+            for (int i = 0; i < 2; i++) {
                 String s = Text.decToBin(file.read(), 8);
                 deg += s.substring(s.length() - 2);
             }
             this.degradation = Text.binToDec(deg);
-
+            
+            String adresseDebut = "";
+            for(int i=0; i<this.getLengthEntete()-2; i++)
+            {
+                String s = Text.decToBin(file.read(), 8);
+                adresseDebut += s.substring(s.length() - 2);
+            }
+            
+            this.adresseDebut = Text.binToDec(adresseDebut);
+            this.file.skipBytes(this.adresseDebut);
+            
             String msg = "";
             String curr_char = readByteBMP();
             while (!curr_char.equals(Text.binToString(Text.END_OF_STRING))) {
@@ -186,5 +215,29 @@ public class Image {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public int getLengthEntete() //retourne la taille en octets de l'entête
+    {
+        int lengthEntete = 2; //taux de dégradation
+        int nbPixels = this.getHauteur() * this.getLargeur() * 3;
+        int nbBits = 0;
+
+        while (Math.pow(2, nbBits) < nbPixels) {
+            nbBits++;
+        } //on cherche le nombre de bits nécessaires pour coder nbPixels
+
+        lengthEntete += nbBits / 2 + nbBits % 2;
+
+        return lengthEntete;
+    }
+
+    public int genRandomAdress(int tailleTexte) {
+        int nbOctets = this.getNbOctets() - this.getLengthEntete();
+        int nbOctetsNecessairesTexte = (tailleTexte + 1) * (int) (8 / Math.pow(2, this.degradation));
+        int adresseMax = nbOctets - nbOctetsNecessairesTexte;
+
+        Random adresse = new Random();
+        return adresse.nextInt(adresseMax);
     }
 }

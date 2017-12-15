@@ -5,7 +5,6 @@
  */
 package steganov11;
 
-import java.io.BufferedReader;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
@@ -31,16 +30,7 @@ import javafx.stage.Window;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.io.File;
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 
@@ -107,6 +97,8 @@ public class FXMLDocumentController implements Initializable {
     private Label destination;
     @FXML
     private Label messageTask;
+    @FXML
+    private TextField password;
 
     public void setImage(String path) {
         try {
@@ -148,19 +140,29 @@ public class FXMLDocumentController implements Initializable {
     @FXML
     private void handleButtonCoder(ActionEvent event) {
         image.setDegradation((int) Math.pow(2, degradation.getValue()));
-        image.coderImage(textToHide.getText());
+        image.setAdresseDebut(image.genRandomAdress(textToHide.getLength()));
+        
+        String texteACoder = textToHide.getText();
+        if(!password.getText().equals(""))
+            texteACoder = Text.encrypt(texteACoder, password.getText()); //cryptage si nécessaire
+        
+        image.coderImage(texteACoder);
         imageView.setImage(new Image(new File(cheminImage).toURI().toString()));
     }
 
     @FXML
     private void handleButtonDecoder(ActionEvent event) {
         String s = image.decoderImage();
+        
+        if(!password.getText().equals(""))
+            s=Text.decrypt(s, password.getText());
+        
         textToHide.setText(s);
     }
 
     private boolean isCodable() {
         int nbOctets = image.getNbOctets();
-        int nbOctetsNecessaires = (textToHide.getText().length() + 1) * (int) (8 / Math.pow(2, degradation.getValue())) + steganov11.Image.TAILLE_ENTETE;
+        int nbOctetsNecessaires = (textToHide.getText().length() + 1) * (int) (8 / Math.pow(2, degradation.getValue())) + image.getLengthEntete();
 
         return !textToHide.getText().equals("") && imageView.getImage() != null && nbOctetsNecessaires <= nbOctets;
     }
@@ -170,7 +172,7 @@ public class FXMLDocumentController implements Initializable {
     }
 
     private void setTailleTexteActuel() {
-        tailleTexteActuel.setText(String.valueOf((textToHide.getText().length() + 1) * (int) (8 / Math.pow(2, degradation.getValue())) + steganov11.Image.TAILLE_ENTETE));
+        tailleTexteActuel.setText(String.valueOf((textToHide.getText().length() + 1) * (int) (8 / Math.pow(2, degradation.getValue())) + image.getLengthEntete()));
     }
 
     @FXML
