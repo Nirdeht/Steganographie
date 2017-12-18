@@ -78,10 +78,12 @@ public class Text {
     }
 
     public static String replaceCharAt(String s, int pos, char c) {
+    //remplace le caractère à la position pos dans s par c
         return s.substring(0, pos) + c + s.substring(pos + 1);
     }
 
     public static String binToString(String s) {
+    //transforme une représentation binaire d'un texte en un texte
         String output = "";
         for (int i = 0; i <= s.length() - 8; i += 8) //tous les 8 bits
         {
@@ -103,10 +105,7 @@ public class Text {
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, new javax.crypto.spec.IvParameterSpec(IV.getBytes()));
             byte[] encoding = cipher.doFinal(s.getBytes());
 
-            System.out.println("---------- Cryptage -----------");
-            System.out.println("MESSAGE CRYPTE EN BASE 64:\t " + DatatypeConverter.printBase64Binary(encoding)); //on code message en Base64
-
-            String crypted = DatatypeConverter.printBase64Binary(encoding); //on décode le message en Base64
+            String crypted = DatatypeConverter.printBase64Binary(encoding);
 
             return crypted;
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {

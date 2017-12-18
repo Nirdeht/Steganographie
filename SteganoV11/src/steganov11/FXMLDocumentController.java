@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package steganov11;
 
 import java.net.URL;
@@ -121,6 +116,7 @@ public class FXMLDocumentController implements Initializable {
         degradation.setShowTickLabels(true);
 
         degradation.valueProperty().addListener((ObservableValue<? extends Number> obs, Number oldValue, Number newValue) -> {
+            //on limite les valeurs à des entiers
             coder.setDisable(!isCodable());
             if (newValue.doubleValue() - Math.floor(newValue.doubleValue()) < 0.5) //on est avant la moitié
             {
@@ -132,6 +128,7 @@ public class FXMLDocumentController implements Initializable {
         });
 
         textToHide.textProperty().addListener((final ObservableValue<? extends String> observable, final String oldValue, final String newValue) -> {
+            //à la modification du texte
             coder.setDisable(!isCodable());
             setTailleTexteActuel();
         });
@@ -139,47 +136,47 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private void handleButtonCoder(ActionEvent event) {
-        image.setDegradation((int) Math.pow(2, degradation.getValue()));
-        image.setAdresseDebut(image.genRandomAdress(textToHide.getLength()));
-        
-        String texteACoder = textToHide.getText();
-        if(!password.getText().equals(""))
+        image.setDegradation((int) Math.pow(2, degradation.getValue())); //on récupère l'info de dégradation
+        image.setAdresseDebut(image.genRandomAdress(textToHide.getLength())); //on génère une adresse de début
+
+        String texteACoder = textToHide.getText(); //on prépare le texte à enregistrer dans l'image
+        if (!password.getText().equals("")) {
             texteACoder = Text.encrypt(texteACoder, password.getText()); //cryptage si nécessaire
-        
-        image.coderImage(texteACoder);
-        imageView.setImage(new Image(new File(cheminImage).toURI().toString()));
+        }
+        image.coderImage(texteACoder); //on enregistre le texte dans l'image
+        imageView.setImage(new Image(new File(cheminImage).toURI().toString())); //on affiche l'image modifié
     }
 
     @FXML
     private void handleButtonDecoder(ActionEvent event) {
-        String s = image.decoderImage();
-        
-        if(!password.getText().equals(""))
-            s=Text.decrypt(s, password.getText());
-        
-        textToHide.setText(s);
+        String s = image.decoderImage(); //on récupère le message de l'image
+
+        if (!password.getText().equals("")) {
+            s = Text.decrypt(s, password.getText()); //décryptage si nécessaire
+        }
+        textToHide.setText(s); //on affiche le texte
     }
 
     private boolean isCodable() {
-        int nbOctets = image.getNbOctets();
-        int nbOctetsNecessaires = (textToHide.getText().length() + 1) * (int) (8 / Math.pow(2, degradation.getValue())) + image.getLengthEntete();
+        int nbOctets = image.getNbOctets() - image.getLengthEntete() - 1 * (int) (8 / Math.pow(2, degradation.getValue())); //nombre octets disponible pour le codage
+        int nbOctetsNecessaires = (textToHide.getText().length()) * (int) (8 / Math.pow(2, degradation.getValue())); //nombre d'octets nécessaires
 
         return !textToHide.getText().equals("") && imageView.getImage() != null && nbOctetsNecessaires <= nbOctets;
     }
 
     private boolean isDecodable() {
-        return imageView.getImage() != null;
+        return imageView.getImage() != null; //on ne peut appeler decoderImage que si l'on a spécifié une image
     }
 
     private void setTailleTexteActuel() {
-        tailleTexteActuel.setText(String.valueOf((textToHide.getText().length() + 1) * (int) (8 / Math.pow(2, degradation.getValue())) + image.getLengthEntete()));
+        tailleTexteActuel.setText(String.valueOf((textToHide.getText().length()) * (int) (8 / Math.pow(2, degradation.getValue())))); //taille en octets que prendra le texte dans l'image
     }
 
     @FXML
     private void handleButtonParcourir(ActionEvent event) {
-        File selectedFile = chooseImageFile();
-        if (selectedFile != null) {
-            imageView.setImage(new Image(selectedFile.toURI().toString()));
+        File selectedFile = chooseImageFile(); //on sélectionne une image
+        if (selectedFile != null) { //si on a bien sélectionné une image
+            imageView.setImage(new Image(selectedFile.toURI().toString())); //on affiche l'image
             cheminImage = selectedFile.getAbsolutePath();
             setImage(cheminImage);
 
@@ -187,16 +184,16 @@ public class FXMLDocumentController implements Initializable {
             textToHide.setDisable(false);
             coder.setDisable(!isCodable());
             decoder.setDisable(!isDecodable());
-            tailleTexteMax.setText(String.valueOf(image.getNbOctets()));
+            tailleTexteMax.setText(String.valueOf(image.getNbOctets() - image.getLengthEntete() - 1 * (int) (8 / Math.pow(2, degradation.getValue())))); //nombre d'octets modifiables
         }
     }
 
     private File chooseImageFile() {
         Window mainStage = mainPane.getScene().getWindow();
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Open Resource File");
+        fileChooser.setTitle("Choissisez une image");
         fileChooser.getExtensionFilters().add(
-                new ExtensionFilter("Image Files", "*.bmp")
+                new ExtensionFilter("Image", "*.bmp")
         );
         File selectedFile = fileChooser.showOpenDialog(mainStage);
 
@@ -220,11 +217,11 @@ public class FXMLDocumentController implements Initializable {
     private void handleEnvoiImage(ActionEvent event) {
         File selectedFile;
 
-        selectedFile = chooseImageFile(); //on commence par sélectionner l'image à envoyer
+        selectedFile = chooseImageFile(); //on commence par demander l'image à envoyer
 
-        if (selectedFile != null) {
-            visualisationImage.setImage(new Image(selectedFile.toURI().toString()));
-            tasks.SendFile sf = new tasks.SendFile(selectedFile);
+        if (selectedFile != null) { //si un fichier a été sélectionné
+            visualisationImage.setImage(new Image(selectedFile.toURI().toString())); //on affiche l'image
+            tasks.SendFile sf = new tasks.SendFile(selectedFile); //on prépare l'envoi de l'image
             sf.messageProperty().addListener((obs, oldMsg, newMsg) -> {
                 messageTask.setText(newMsg);
             });
@@ -234,26 +231,37 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private void handleRecevoirFichier(ActionEvent event) {
-        String dossier = destination.getText();
+        if (!ipRecevoir.getText().equals("") && !portRecevoir.getText().equals("")) {
+            String dossier = destination.getText(); //on récupère le dossier d'enregistrement
 
-        if (dossier.equals("")) {
-            dossier = System.getenv("user.home");
-        }
-
-        tasks.ReceiveFile rf = new tasks.ReceiveFile(ipRecevoir.getText(), Integer.valueOf(portRecevoir.getText()), dossier);
-        rf.messageProperty().addListener((obs, oldMsg, newMsg) -> {
-            messageTask.setText(newMsg);
-        });
-
-        rf.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-            @Override
-            public void handle(WorkerStateEvent t) {
-                File img = rf.getValue();
-                if(img!=null)
-                    visualisationImage.setImage(new Image(img.toURI().toString()));
-                    imageView.setImage(new Image(img.toURI().toString()));
+            if (dossier.equals("")) { //si il n'y a pas de dossier spécifié
+                dossier = System.getProperty("user.home"); //on en met un par défaut (répertoire home)
             }
-        });
-        new Thread(rf).start();
+
+            tasks.ReceiveFile rf = new tasks.ReceiveFile(ipRecevoir.getText(), Integer.valueOf(portRecevoir.getText()), dossier); //on se prépare à recevoir l'image
+            rf.messageProperty().addListener((obs, oldMsg, newMsg) -> {
+                messageTask.setText(newMsg); //on lie le message d'état de la tâche à un label
+            });
+
+            rf.setOnSucceeded(new EventHandler<WorkerStateEvent>() { //quand le transfert se finit
+                @Override
+                public void handle(WorkerStateEvent t) {
+                    File img = rf.getValue();
+                    if (img != null) {
+                        visualisationImage.setImage(new Image(img.toURI().toString()));
+                        imageView.setImage(new Image(img.toURI().toString()));
+
+                        setImage(img.getAbsolutePath());
+
+                        degradation.setDisable(false);
+                        textToHide.setDisable(false);
+                        coder.setDisable(!isCodable());
+                        decoder.setDisable(!isDecodable());
+                        tailleTexteMax.setText(String.valueOf(image.getNbOctets() - image.getLengthEntete() - 1 * (int) (8 / Math.pow(2, degradation.getValue())))); //nombre d'octets modifiables
+                    }
+                }
+            });
+            new Thread(rf).start();
+        }
     }
 }
