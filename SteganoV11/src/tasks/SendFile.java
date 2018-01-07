@@ -13,9 +13,15 @@ import javafx.concurrent.Task;
 public class SendFile extends Task<Void> {
 
     private final File img;
+    private String ipServeur;
+    private int portServeur;
+    private String destination;
 
-    public SendFile(File img) {
+    public SendFile(File img, String ipServeur, int portServeur) {
         this.img = img;
+        this.ipServeur = ipServeur;
+        this.portServeur = portServeur;
+        this.destination = destination;
     }
 
     @Override
@@ -26,14 +32,13 @@ public class SendFile extends Task<Void> {
             InputStream fis;
             PrintWriter printWriterOut;
             OutputStream fos;
-
-            ServerSocket server = new ServerSocket(2009); //on prépare le serveur
-            updateMessage("Attente d'un client");
-            Socket clientSocket = server.accept(); //on attend un client
             
-            fos = clientSocket.getOutputStream();
+            updateMessage("Connexion");
+            Socket client = new Socket(ipServeur, portServeur); //on se connecte au serveur
             
-            //on commence par envoyer le nom du fichier au client
+            fos = client.getOutputStream();
+            
+            //on commence par envoyer le nom du fichier au serveur
             printWriterOut = new PrintWriter(fos);
             printWriterOut.println(img.getName());
             printWriterOut.flush();
@@ -50,8 +55,7 @@ public class SendFile extends Task<Void> {
             fos.flush();
             fos.close();
             fis.close();
-            clientSocket.close(); //on ferme le socket client
-            server.close(); //on ferme notre socket
+            client.close();
         } catch (IOException e) {
             updateMessage(e.getMessage());
         }

@@ -6,19 +6,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.ServerSocket;
 import java.net.Socket;
 import javafx.concurrent.Task;
 
 public class ReceiveFile extends Task<File> {
-
-    private String ipServeur;
-    private int portServeur;
+    
     private String destination;
     
-    public ReceiveFile(String ipServeur, int portServeur, String destination)
+    public ReceiveFile(String destination)
     {
-        this.ipServeur = ipServeur;
-        this.portServeur = portServeur;
         this.destination = destination;
     }
 
@@ -30,13 +27,14 @@ public class ReceiveFile extends Task<File> {
         BufferedReader in;
         String fileName;
 
-        try {
-            updateMessage("Connexion");
-            Socket client = new Socket(ipServeur, portServeur); //on se connecte au serveur
+        try {          
+            ServerSocket server = new ServerSocket(2009); //on prépare le serveur
+            updateMessage("Attente de connexion");
+            Socket clientSocket = server.accept(); //on attend un client
 
             updateMessage("Attente nom du fichier");
             //on récupère le nom du fichier
-            in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             fileName = in.readLine();
             //in.close();
 
@@ -45,7 +43,7 @@ public class ReceiveFile extends Task<File> {
             updateMessage("Réception de l'image");
             //on récupère l'image
             FileOutputStream fos = new FileOutputStream(img);
-            InputStream fis = client.getInputStream();
+            InputStream fis = clientSocket.getInputStream();
 
             while ((bw = fis.read(buffer)) != -1) {
                 fos.write(buffer, 0, bw);
@@ -55,7 +53,8 @@ public class ReceiveFile extends Task<File> {
             fos.flush();
             fos.close();
             fis.close();
-            client.close();
+            clientSocket.close(); //on ferme le socket client
+            server.close(); //on ferme notre socket
             updateMessage("Fichier téléchargé");
         } catch (IOException ex) {
             updateMessage(ex.getMessage());
