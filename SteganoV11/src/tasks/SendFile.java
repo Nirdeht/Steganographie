@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
 import javafx.concurrent.Task;
 
@@ -15,13 +14,11 @@ public class SendFile extends Task<Void> {
     private final File img;
     private String ipServeur;
     private int portServeur;
-    private String destination;
 
     public SendFile(File img, String ipServeur, int portServeur) {
         this.img = img;
         this.ipServeur = ipServeur;
         this.portServeur = portServeur;
-        this.destination = destination;
     }
 
     @Override
