@@ -1,5 +1,6 @@
 package steganov11;
 
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -26,7 +27,7 @@ public class Text {
         return groupes;
     }
 
-    public static String decToBin(int dec, int length) //dec : à la valeur décimale à coder en binaire
+    public static String decToBin(int dec, int length) //dec : la valeur décimale à coder en binaire
     //length : la taille de la chaine de caractère (on complète à gauche par des 0)
     //si le nombre doit etre codé sur plus de length bits, alors length est ignoré
     {
@@ -70,25 +71,25 @@ public class Text {
                 }
                 binary += bin;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(Text.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return binary;
     }
 
     public static String replaceCharAt(String s, int pos, char c) {
-    //remplace le caractère à la position pos dans s par c
+        //remplace le caractère à la position pos dans s par c
         return s.substring(0, pos) + c + s.substring(pos + 1);
     }
 
     public static String binToString(String s) {
-    //transforme une représentation binaire d'un texte en un texte
+        //transforme une représentation binaire d'un texte en une chaîne de caractères
         String output = "";
-        for (int i = 0; i <= s.length() - 8; i += 8) //tous les 8 bits
+        for (int i = 0; i <= s.length() - 8; i += 8) //tous les 8 bits, car une lettre est codée sur 8 bits
         {
-            int k = binToDec(s.substring(i, i + 8));
-            output += (char) k;
+            int k = binToDec(s.substring(i, i + 8)); //on extrait la valeur décimale de la lettre
+            output += (char) k; //on ajoute la lettre à la chaîne
         }
 
         return output;
@@ -97,7 +98,7 @@ public class Text {
     public static String encrypt(String s, String cle) {
         try {
             byte[] key = cle.getBytes(); //Conversion de la clé en octets et création du vecteur d'initialisation
-            String IV = "12345678";
+            String IV = "c!Q62Q4:";
 
             SecretKeySpec keySpec = new SecretKeySpec(key, "Blowfish");
             Cipher cipher = Cipher.getInstance("Blowfish/CBC/PKCS5Padding"); //Création de la clé et du Cipher utilisant Blowfish
@@ -118,7 +119,7 @@ public class Text {
         try {
             byte[] ciphertext = DatatypeConverter.parseBase64Binary(crypted);
             byte[] key = cle.getBytes(); //Conversion de la clé en octets et création du vecteur d'initialisation
-            String IV = "12345678";
+            String IV = "c!Q62Q4:";
 
             SecretKeySpec keySpec = new SecretKeySpec(key, "Blowfish");
             Cipher cipher = Cipher.getInstance("Blowfish/CBC/PKCS5Padding"); //Création de la clé et du Cipher utilisant Blowfish
@@ -127,12 +128,7 @@ public class Text {
             byte[] message = cipher.doFinal(ciphertext);
 
             return new String(message);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException ex) {
-            Logger.getLogger(Text.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
-        catch(BadPaddingException ex)
-        {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {
             return "Mot de passe erroné";
         }
     }

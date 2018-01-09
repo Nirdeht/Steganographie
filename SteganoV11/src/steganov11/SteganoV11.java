@@ -15,6 +15,7 @@ public class SteganoV11 extends Application {
         Scene scene = new Scene(root);
 
         stage.setScene(scene);
+        stage.setTitle("Steganographie");
         stage.setResizable(false);
         scene.getStylesheets().add("css/bootstrap.css");
         stage.show();

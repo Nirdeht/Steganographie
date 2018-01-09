@@ -14,10 +14,7 @@ import java.io.FileNotFoundException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.value.ObservableValue;
-import javafx.scene.Node;
 import javafx.scene.control.Slider;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -81,7 +78,7 @@ public class FXMLDocumentController implements Initializable {
     private TextArea textDecode;
     @FXML
     private PasswordField passwordDecoder;
-    
+
     private steganov11.Image image;
     private String cheminImage;
 
@@ -98,6 +95,7 @@ public class FXMLDocumentController implements Initializable {
         coder.setDisable(true);
         decoder.setDisable(true);
         degradation.setDisable(true);
+        textToHide.setDisable(true);
 
         degradation.setMin(0);
         degradation.setMax(3);
@@ -142,20 +140,25 @@ public class FXMLDocumentController implements Initializable {
         image.setDegradation((int) Math.pow(2, degradation.getValue())); //on récupère l'info de dégradation
         image.setAdresseDebut(image.genRandomAdress(textToHide.getLength())); //on génère une adresse de début
         String fichierSortie;
-        
-        File selectedDirectory = chooseDirectory();
-        if(selectedDirectory != null)
-            fichierSortie = selectedDirectory.getAbsolutePath() + cheminImage.substring(cheminImage.lastIndexOf(File.separator));
-        else
-            fichierSortie = System.getProperty("user.home") + cheminImage.substring(cheminImage.lastIndexOf(File.separator));
-        image.setFichierSortie(fichierSortie);
 
-        String texteACoder = textToHide.getText(); //on prépare le texte à enregistrer dans l'image
-        if (!passwordCoder.getText().equals("")) {
-            texteACoder = Text.encrypt(texteACoder, passwordCoder.getText()); //cryptage si nécessaire
+        File selectedDirectory = chooseDirectory();
+        if (selectedDirectory != null) {
+            fichierSortie = selectedDirectory.getAbsolutePath() + cheminImage.substring(cheminImage.lastIndexOf(File.separator));
+
+            image.setFichierSortie(fichierSortie);
+
+            String texteACoder = textToHide.getText(); //on prépare le texte à enregistrer dans l'image
+            if (!passwordCoder.getText().equals("")) {
+                texteACoder = Text.encrypt(texteACoder, passwordCoder.getText()); //cryptage si nécessaire
+            }
+            image.coderImage(texteACoder); //on enregistre le texte dans l'image
+            previsualisation.setImage(new Image(new File(fichierSortie).toURI().toString())); //on affiche l'image modifiée
+            try {
+                image = new steganov11.Image(fichierSortie, null);
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
-        image.coderImage(texteACoder); //on enregistre le texte dans l'image
-        previsualisation.setImage(new Image(new File(fichierSortie).toURI().toString())); //on affiche l'image modifié
     }
 
     @FXML
@@ -189,9 +192,10 @@ public class FXMLDocumentController implements Initializable {
         if (selectedFile != null) { //si on a bien sélectionné une image
             previsualisation.setImage(new Image(selectedFile.toURI().toString())); //on affiche l'image
             cheminImage = selectedFile.getAbsolutePath();
-            setImage(cheminImage);
+            this.setImage(cheminImage);
 
             degradation.setDisable(false);
+            textToHide.setDisable(false);
             coder.setDisable(!isCodable());
             decoder.setDisable(!isDecodable());
             tailleTexteMax.setText(String.valueOf(image.getNbOctets() - image.getLengthEntete() - 1 * (int) (8 / Math.pow(2, degradation.getValue())))); //nombre d'octets modifiables
@@ -209,15 +213,14 @@ public class FXMLDocumentController implements Initializable {
 
         return selectedFile;
     }
-    
-    private File chooseDirectory()
-    {
-        Window mainStage =  mainPane.getScene().getWindow();
+
+    private File chooseDirectory() {
+        Window mainStage = mainPane.getScene().getWindow();
         DirectoryChooser dc = new DirectoryChooser();
         dc.setTitle("Dossier d'enregistrement");
 
         File selectedFolder = dc.showDialog(mainStage);
-            return selectedFolder;
+        return selectedFolder;
     }
 
     /*TAB RECEVOIR/ENVOYER*/
@@ -259,6 +262,7 @@ public class FXMLDocumentController implements Initializable {
         tasks.ReceiveFile rf = new tasks.ReceiveFile(dossier); //on se prépare à recevoir l'image
         rf.messageProperty().addListener((obs, oldMsg, newMsg) -> {
             messageTask.setText(newMsg); //on lie le message d'état de la tâche à un label
+            //lorsque la tâche appellera 
         });
 
         rf.setOnSucceeded(new EventHandler<WorkerStateEvent>() { //quand le transfert se finit
