@@ -256,8 +256,8 @@ public class Image {
 
     public int genRandomAdress(int tailleTexte) {
         //génère une adresse de départ pour le texte
-        int nbOctets = this.getNbOctets() - this.getLengthEntete() - 1; //nombre d'octets modifiables dans l'image
-        int nbOctetsNecessairesTexte = tailleTexte + 1 * (int) (8 / Math.pow(2, this.degradation)); //nombre d'octets nécessaires pour enregistrer le texte
+        int nbOctets = this.getNbOctets() - this.getLengthEntete(); //nombre d'octets modifiables dans l'image
+        int nbOctetsNecessairesTexte = (tailleTexte + 1) * (int) (8 / Math.pow(2, this.degradation)); //nombre d'octets nécessaires pour enregistrer le texte
         int adresseMax = nbOctets - nbOctetsNecessairesTexte; //adresse maximum que l'on veut générer
 
         Random adresse = new Random();
