@@ -248,8 +248,9 @@ public class Image {
         while (Math.pow(2, nbBits) < nbPixels) {
             nbBits++;
         } //on cherche le nombre de bits nécessaires pour coder nbPixels
-
-        lengthEntete += nbBits / 2 + nbBits % 2; //on veut une entete paire, on change les deux derniers pixels de chaque octet.
+        if(nbBits % 2 == 1)
+            nbBits++; //on veut une entete paire, on change les deux derniers bits de chaque octet.
+        lengthEntete += nbBits/2; //car 2 bits par octet
 
         return lengthEntete;
     }
