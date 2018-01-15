@@ -183,7 +183,7 @@ public class FXMLDocumentController implements Initializable {
     }
 
     private void setTailleTexteActuel() {
-        tailleTexteActuel.setText(String.valueOf((textToHide.getText().length()) * (int) (8 / Math.pow(2, degradation.getValue())))); //taille en octets que prendra le texte dans l'image
+        tailleTexteActuel.setText(String.valueOf((textToHide.getText().length() * (int) (8 / Math.pow(2, degradation.getValue()))))); //taille en octets que prendra le texte dans l'image
     }
 
     @FXML

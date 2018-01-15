@@ -107,8 +107,8 @@ public class Image {
                 this.fichierSortie.write(Text.binToDec(b)); //on écrit dans le fichier de sortie
             }//on a écrit la dégradation
 
-            String adresseDebutBin = Text.decToBin(this.adresseDebut, this.getLengthEntete() - 2);
-
+            String adresseDebutBin = Text.decToBin(this.adresseDebut, (this.getLengthEntete() - 2)*2);
+            
             groupes = Text.getParts(adresseDebutBin, 2);
 
             for (int i = 0; i < groupes.length; i++) {
@@ -159,6 +159,7 @@ public class Image {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        this.close();
     }
 
     public String decoderImage() {
@@ -170,16 +171,16 @@ public class Image {
                 deg += s.substring(s.length() - 2); //on récupère que les deux derniers bits (car le taux de dégradation est de 2)
             } //on lit l'info sur le taux de dégradation
             this.degradation = Text.binToDec(deg);
-
+            
             String adresseDebut = "";
+            
             for (int i = 0; i < this.getLengthEntete() - 2; i++) {
                 String s = Text.decToBin(fichierEntree.read(), 8);
                 adresseDebut += s.substring(s.length() - 2); //de même on isole les deux derniers bits
             } //on lit l'adresse de début (qui correspond au nombre d'octets à ignorer à partir de la fin de l'entete)
             this.adresseDebut = Text.binToDec(adresseDebut);
-
+            
             this.fichierEntree.skipBytes(this.adresseDebut); //on se place au début du message
-
             String msg = "";
             String curr_char = readByteBMP(); //on lit un caractère du message
             while (!curr_char.equals(Text.binToString(Text.END_OF_STRING))) { //tant que le caractère actuel ne correspond pas à une fin de chaine
@@ -198,12 +199,8 @@ public class Image {
             for (int i = 0; i < 8 / this.degradation; i++)//on lit par groupe de {this.degradation} bits.
             {
                 String value = Text.decToBin(this.fichierEntree.read(), 8); //on lit un octet
-                for (int j = this.degradation - 1; j >= 0; j--) {
-                    s += value.substring(value.length()-this.degradation); //on extrait les 1/2/4/8 derniers bits de la chaine value
-                    //s += String.valueOf(value.charAt(value.length() - j - 1)); //on compose le caractère
-                }
+                s += value.substring(value.length()-this.degradation); //on extrait les 1/2/4/8 derniers bits de la chaine value
             }
-
             return Text.binToString(s);
         } catch (Exception e) {
             e.printStackTrace();
@@ -248,16 +245,17 @@ public class Image {
         while (Math.pow(2, nbBits) < nbPixels) {
             nbBits++;
         } //on cherche le nombre de bits nécessaires pour coder nbPixels
-
-        lengthEntete += nbBits / 2 + nbBits % 2; //on veut une entete paire, on change les deux derniers pixels de chaque octet.
+        if(nbBits % 2 == 1)
+            nbBits++; //on veut une entete paire, on change les deux derniers bits de chaque octet.
+        lengthEntete += nbBits/2; //car 2 bits par octet
 
         return lengthEntete;
     }
 
     public int genRandomAdress(int tailleTexte) {
         //génère une adresse de départ pour le texte
-        int nbOctets = this.getNbOctets() - this.getLengthEntete() - 1; //nombre d'octets modifiables dans l'image
-        int nbOctetsNecessairesTexte = tailleTexte + 1 * (int) (8 / Math.pow(2, this.degradation)); //nombre d'octets nécessaires pour enregistrer le texte
+        int nbOctets = this.getNbOctets() - this.getLengthEntete(); //nombre d'octets modifiables dans l'image
+        int nbOctetsNecessairesTexte = (tailleTexte + 1) * (int) (8 / Math.pow(2, this.degradation)); //nombre d'octets nécessaires pour enregistrer le texte (+1 correspond au caractère \0)
         int adresseMax = nbOctets - nbOctetsNecessairesTexte; //adresse maximum que l'on veut générer
 
         Random adresse = new Random();
